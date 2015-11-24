@@ -1,0 +1,70 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@drawable/bg"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+
+
+     <org.dreamfly.circlemenu.CirCleLayout
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:layout_centerInParent="true"
+         android:id="@+id/circlelayout_mainactivity_mainlayout"
+         android:background="@drawable/circle_bg">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:id="@+id/img_mainactivity_center"
+                    android:src="@drawable/turnplate_center_unlogin"/>
+                 <ImageView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:id="@+id/img_mainactivity_mbank_1"
+                     android:layout_marginTop="56dp"
+                     android:layout_marginLeft="64dp"
+                     android:src="@drawable/home_mbank_1_normal"/>
+                 <ImageView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:id="@+id/img_mainactivity_mbank_2"
+                     android:layout_marginTop="16dp"
+                     android:layout_centerHorizontal="true"
+                     android:src="@drawable/home_mbank_2_normal"/>
+            <ImageView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/img_mainactivity_mbank_3"
+                 android:layout_below="@id/img_mainactivity_mbank_1"
+                 android:layout_marginTop="48dp"
+                 android:layout_marginLeft="24dp"
+                 android:src="@drawable/home_mbank_3_normal"/>
+             <ImageView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/img_mainactivity_mbank_4"
+                 android:layout_below="@id/img_mainactivity_mbank_3"
+                 android:layout_marginTop="36dp"
+                 android:layout_marginLeft="96dp"
+                 android:src="@drawable/home_mbank_4_normal"/>
+             <ImageView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/img_mainactivity_mbank_5"
+                 android:layout_alignParentRight="true"
+                 android:layout_marginTop="54dp"
+                 android:layout_marginRight="48dp"
+                 android:src="@drawable/home_mbank_5_normal"/>
+           <ImageView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:id="@+id/img_mainactivity_mbank_6"
+             android:layout_alignParentRight="true"
+             android:layout_below="@id/img_mainactivity_mbank_5"
+             android:layout_marginTop="16dp"
+             android:layout_marginRight="36dp"
+             android:src="@drawable/home_mbank_6_normal"/>
+     </org.dreamfly.circlemenu.CirCleLayout>
+</RelativeLayout>
