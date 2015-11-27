@@ -2,9 +2,14 @@ package org.dreamfly.circlemenu;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -30,11 +35,23 @@ public class CirCleLayout extends RelativeLayout{
 
        private float mDisAnlge;
 
+
        private final static int  ONE_QUADRANT=1;
        private final static int  TWO_QUADRANT=2;
        private final static int  THREE_QUADRANT=3;
        private final static int  FOUR_QUADRANT=4;
 
+       private final static int SHUNSHI=1;
+
+       private final static int NISHI=2;
+
+       private final  static int QUICK_FLING_VELOCITY=10000;
+
+
+       private VelocityTracker mVelocityTracker;
+       private int mMaxVelocity;
+
+       private int direction;
 
 
        public CirCleLayout(Context mContext,AttributeSet attrs){
@@ -42,6 +59,8 @@ public class CirCleLayout extends RelativeLayout{
            isOnce=false;
            this.imgArr=new ImageView[6];
            mDisAnlge=60.0f;
+           this.mVelocityTracker=VelocityTracker.obtain();
+           this.mMaxVelocity= ViewConfiguration.get(mContext).getScaledMaximumFlingVelocity();
        }
 
       @Override
@@ -114,6 +133,7 @@ public class CirCleLayout extends RelativeLayout{
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event){
+         this.mVelocityTracker.addMovement(event);
           switch (event.getAction()){
               case MotionEvent.ACTION_DOWN:
                   //touchX,touchY 是针对一个组件内部左边值
@@ -121,7 +141,13 @@ public class CirCleLayout extends RelativeLayout{
                   this.mLastY=event.getY();
                   return(true);
               case MotionEvent.ACTION_UP:
-
+                  this.mVelocityTracker.computeCurrentVelocity(1000,mMaxVelocity);
+                  float veloctiyX=Math.abs(mVelocityTracker.getXVelocity());
+                  float velocityY=Math.abs(mVelocityTracker.getYVelocity());
+                  float maxVelocity=Math.max(veloctiyX,velocityY);
+                  if(maxVelocity>QUICK_FLING_VELOCITY){
+                     autoQuickRotate((int)maxVelocity);
+                  }
                   break;
               case MotionEvent.ACTION_MOVE:
                   float endX=event.getX();
@@ -135,10 +161,20 @@ public class CirCleLayout extends RelativeLayout{
                   int quart=this.judgeQuadrant((int)endX,(int)endY);
                   //如果是1，4象限，则起始角度可以按照普通三角函数的角度象限法（顺时针减，逆时针增）来递增，递减
                   if(quart==ONE_QUADRANT || quart==FOUR_QUADRANT) {
+                         if(disAngle>0){
+                             this.direction=NISHI;
+                         }else{
+                             this.direction=SHUNSHI;
+                         }
                          this.mstartAngle -= disAngle;
                   //如果为2,3 象限，则其实角度的递增和递减是反着的.
                   }else if(quart==TWO_QUADRANT || quart==THREE_QUADRANT){
-                          this.mstartAngle+=disAngle;
+                         if(disAngle>0){
+                             direction=SHUNSHI;
+                         }else{
+                             direction=NISHI;;
+                         }
+                         this.mstartAngle+=disAngle;
                   }
                   requestLayout();
                   break;
@@ -183,8 +219,40 @@ public class CirCleLayout extends RelativeLayout{
           }else{
               return (-1);
           }
+    }
+
+    private Handler mHandler=new Handler(Looper.getMainLooper()){
+             public void handleMessage(Message msg) {
+                    int paramVelocity=msg.arg1-500;
+                       if(direction==NISHI) {
+                           mstartAngle-=msg.arg2;
+                       }else if(direction==SHUNSHI){
+                           mstartAngle+=msg.arg2;
+                       }
+                    requestLayout();
+                    autoQuickRotate(paramVelocity);
+             }
+    };
+
+    /**
+     * 自动旋转
+     */
+    private void autoQuickRotate(int velocity){
+           Message message=new Message();
+           message.arg1=velocity;
+           if(velocity>=20000){
+                message.arg2=20;
+           }else if(velocity<20000 && velocity>=15000){
+                message.arg2=20;
+           }else if(velocity<15000 && velocity>=12000){
+                message.arg2=20;
+           }else if(velocity<12000 && velocity>=10000){
+                message.arg2=20;
+           }
+           mHandler.sendMessageDelayed(message,30);
 
     }
+
 
 
 }
