@@ -36,29 +36,36 @@ public class CirCleLayout extends RelativeLayout{
        private float mDisAnlge;
 
 
+       //根据中心坐标判定手势采集的坐标位于哪个象限
        private final static int  ONE_QUADRANT=1;
        private final static int  TWO_QUADRANT=2;
        private final static int  THREE_QUADRANT=3;
        private final static int  FOUR_QUADRANT=4;
 
+       //顺时针旋转
        private final static int SHUNSHI=1;
 
+       //逆时针旋转
        private final static int NISHI=2;
 
-       private final  static int QUICK_FLING_VELOCITY=10000;
+       //最少要执行快速旋转的速度
+       private final  static int QUICK_FLING_VELOCITY=5000;
 
-
+       private final static int MSG_WHAT=100;
        private VelocityTracker mVelocityTracker;
        private int mMaxVelocity;
 
+       //旋转的方向
        private int direction;
-
+       //是否正在旋转
+       private boolean isRotating;
 
        public CirCleLayout(Context mContext,AttributeSet attrs){
            super(mContext,attrs);
            isOnce=false;
            this.imgArr=new ImageView[6];
            mDisAnlge=60.0f;
+           this.isRotating=false;
            this.mVelocityTracker=VelocityTracker.obtain();
            this.mMaxVelocity= ViewConfiguration.get(mContext).getScaledMaximumFlingVelocity();
        }
@@ -69,7 +76,6 @@ public class CirCleLayout extends RelativeLayout{
         //找到圆心坐标
         int piontX=this.getMeasuredWidth()/2;
         int piontY=this.getMeasuredHeight()/2;
-
         //设置半径
         int raduis=this.getMeasuredWidth()/3;
 
@@ -78,7 +84,6 @@ public class CirCleLayout extends RelativeLayout{
         mRadius=raduis;
 
         for(int index=0;index<=5;index++){
-
               //根据sin,cos函数去计算每个ImageView应该有的中心点
               double angle=(mstartAngle+mDisAnlge*(index+1))/180.0;
               double radioY=Math.sin(angle*Math.PI);
@@ -115,6 +120,7 @@ public class CirCleLayout extends RelativeLayout{
 
     /**
      * 每个ImageView中心点布局
+     * 按照中心的画圆，然后计算每个imageview的位置
      * @param imageView
      * @param centerX
      * @param centerY
@@ -136,11 +142,16 @@ public class CirCleLayout extends RelativeLayout{
          this.mVelocityTracker.addMovement(event);
           switch (event.getAction()){
               case MotionEvent.ACTION_DOWN:
-                  //touchX,touchY 是针对一个组件内部左边值
-                  this.mLastX=event.getX();
-                  this.mLastY=event.getY();
+                  //touchX,touchY 是针对一个组件内部的数值
+                  this.mLastX = event.getX();
+                  this.mLastY = event.getY();
+                  if(this.isRotating) {
+                     mHandler.removeMessages(MSG_WHAT);
+                     isRotating=false;
+                  }
                   return(true);
               case MotionEvent.ACTION_UP:
+                  //手势抬起之后，计算速度,看是否会达到最大滑动速度的上限
                   this.mVelocityTracker.computeCurrentVelocity(1000,mMaxVelocity);
                   float veloctiyX=Math.abs(mVelocityTracker.getXVelocity());
                   float velocityY=Math.abs(mVelocityTracker.getYVelocity());
@@ -149,6 +160,7 @@ public class CirCleLayout extends RelativeLayout{
                      autoQuickRotate((int)maxVelocity);
                   }
                   break;
+
               case MotionEvent.ACTION_MOVE:
                   float endX=event.getX();
                   float endY=event.getY();
@@ -172,9 +184,10 @@ public class CirCleLayout extends RelativeLayout{
                          if(disAngle>0){
                              direction=SHUNSHI;
                          }else{
-                             direction=NISHI;;
+                             direction=NISHI;
                          }
                          this.mstartAngle+=disAngle;
+                         //为抬起之后的滑动的方向做准备
                   }
                   requestLayout();
                   break;
@@ -221,36 +234,41 @@ public class CirCleLayout extends RelativeLayout{
           }
     }
 
+    /**
+     * 接受到msg之后，计算startAngle的数值
+     */
     private Handler mHandler=new Handler(Looper.getMainLooper()){
              public void handleMessage(Message msg) {
-                    int paramVelocity=msg.arg1-500;
-                       if(direction==NISHI) {
-                           mstartAngle-=msg.arg2;
-                       }else if(direction==SHUNSHI){
-                           mstartAngle+=msg.arg2;
-                       }
-                    requestLayout();
-                    autoQuickRotate(paramVelocity);
+                     int paramVelocity = msg.arg1 - 500;
+                     if (direction == NISHI) {
+                         mstartAngle -= msg.arg2;
+                     } else if (direction == SHUNSHI) {
+                         mstartAngle += msg.arg2;
+                     }
+                     requestLayout();
+                     autoQuickRotate(paramVelocity);
              }
     };
 
     /**
-     * 自动旋转
+     * 自动旋转的函数
+     * 影响滑动流畅的程度的因素:
+     * 刷新频率的高低(帧数)
+     *
      */
     private void autoQuickRotate(int velocity){
            Message message=new Message();
            message.arg1=velocity;
-           if(velocity>=20000){
-                message.arg2=20;
-           }else if(velocity<20000 && velocity>=15000){
-                message.arg2=20;
-           }else if(velocity<15000 && velocity>=12000){
-                message.arg2=20;
-           }else if(velocity<12000 && velocity>=10000){
-                message.arg2=20;
-           }
-           mHandler.sendMessageDelayed(message,30);
-
+           message.what=MSG_WHAT;
+        if(!(velocity<1000)) {
+            //斜率公式
+            message.arg2=(int)(7.9f+(4.0f/1900.0f)*velocity);
+            mHandler.removeMessages(MSG_WHAT);
+            mHandler.sendMessageDelayed(message, 20);
+        }
+        if(!isRotating){
+            isRotating=true;
+        }
     }
 
 
